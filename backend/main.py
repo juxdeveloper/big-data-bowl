@@ -1,5 +1,6 @@
 """
-ASV - Alignment Success Value | NFL Big Data Bowl 2026 (UNAM / AWS / NFL)
+ASV - Alignment Success Value
+Equipo Data Rushers | NFL Big Data Bowl 2026 (UNAM / AWS / NFL)
 Backend FastAPI. Sirve artefactos precomputados (backend/precompute.py) y el agente Rusher.
 Ejecuta: .venv/bin/uvicorn backend.main:app --reload
 """
@@ -32,7 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ART = ROOT / "backend" / "artifacts"
 DIST = ROOT / "dashboard" / "dist"
 
-app = FastAPI(title="ASV - Alignment Success Value", version="1.0.0")
+app = FastAPI(title="ASV - Alignment Success Value | Data Rushers", version="1.0.0")
 
 
 # ------------------------------------------------------------------ artefactos
@@ -307,7 +308,8 @@ TOOL_SPEC = [
     for n, (_, d) in TOOLS.items()
 ]
 
-SYSTEM = """Eres Rusher, analista asistente del tablero ASV (Alignment Success Value) del NFL Big Data Bowl 2026.
+SYSTEM = """Eres Rusher, analista asistente del tablero ASV (Alignment Success Value), construido por el equipo
+Data Rushers para el NFL Big Data Bowl 2026.
 ASV mide cuantas jugadas exitosas por snap gana un acomodo (formacion + personal) por encima de lo esperado
 dada la situacion de juego, sobre las semanas 1-8 de la temporada 2021 (solo jugadas de pase).
 

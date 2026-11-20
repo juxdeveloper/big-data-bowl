@@ -77,7 +77,10 @@ function Shell({ children, meta }: { children: React.ReactNode; meta?: Meta }) {
             <div className="hairline mt-1 w-28" />
           </button>
           <div className="text-right text-[10px] uppercase tracking-[0.12em] text-[#6b6f76]">
-            <div>NFL Big Data Bowl 2026 · Perfil Entrenador</div>
+            <div>
+              Equipo <span className="font-semibold text-[#14161a]">Data Rushers</span> · NFL Big Data Bowl 2026 ·
+              Perfil Entrenador
+            </div>
             {meta ? (
               <div className="num mt-0.5 text-[#8a8e95]">
                 {String(meta.scope.analyzedPlays)} jugadas · {String(meta.scope.games)} partidos · temporada 2021,
@@ -88,6 +91,12 @@ function Shell({ children, meta }: { children: React.ReactNode; meta?: Meta }) {
         </div>
       </header>
       <main className="mx-auto max-w-[1180px] px-5 pb-28 pt-7">{children}</main>
+      <footer className="border-t rule">
+        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-2 px-5 py-4 text-[10px] uppercase tracking-[0.12em] text-[#8a8e95]">
+          <span>Data Rushers · NFL Big Data Bowl 2026 · UNAM · AWS · NFL</span>
+          <span>Datos NFL Next Gen Stats y Pro Football Focus, temporada 2021</span>
+        </div>
+      </footer>
     </div>
   )
 }

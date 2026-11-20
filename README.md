@@ -1,5 +1,7 @@
 # ASV — Alignment Success Value
 
+**Equipo: Data Rushers** · NFL Big Data Bowl 2026 (UNAM · AWS · NFL) · Perfil **Entrenador**
+
 Construimos un tablero para entrenadores que responde una sola pregunta: cuál es el mejor acomodo posible de cada equipo de la NFL, en perfil general, ofensivo y defensivo, a partir de 8,522 jugadas de pase y 8.3 millones de registros de tracking de las semanas 1–8 de 2021. La métrica ASV mide cuántas jugadas exitosas por cada 100 snaps gana un acomodo por encima de lo que un modelo situacional esperaba, de modo que ningún equipo sube de ranking solo por haber enfrentado situaciones fáciles. El hallazgo es que el acomodo óptimo casi nunca es el más usado: en varios equipos, formaciones con menos de 40 snaps superan por más de 5 jugadas por 100 a su formación base, y el mapa del campo muestra exactamente qué once jugadores y en qué coordenadas pre-snap producen esa ventaja. Lo usaría un coordinador ofensivo o defensivo preparando un plan de juego, y un entrenador en jefe decidiendo rotaciones, con el asistente Rusher (Amazon Nova vía Bedrock) consultando las métricas reales en vez de improvisar cifras.
 
 ## Cómo correrlo
@@ -16,7 +18,11 @@ Construimos un tablero para entrenadores que responde una sola pregunta: cuál e
 - **Expectativa**: regresión logística (Newton-IRLS con ridge) sobre 16 rasgos situacionales, validada por partido (AUC 0.631, log-loss 0.661 contra 0.691 de la base).
 - **ASV**: media de (éxito observado − esperado) por acomodo, contraída hacia cero con Bayes empírico (k=40 snaps).
 - **Acomodo**: `offenseFormation + personnelO` en ataque, `personnelD + pff_passCoverage` en defensa. Las coordenadas del mapa son la posición media de cada jugador en el frame del snap, normalizada a atacar hacia +X.
-- **Modelo en TPU**: `ml/train_colab.py` entrena un MLP en JAX sobre Google Colab TPU v6e-1 y exporta los pesos a JSON; la inferencia en producción es numpy puro, dentro del stack permitido.
+- **Modelo en acelerador**: `ml/train_colab.py` entrena un MLP en JAX sobre Google Colab. Probamos los aceleradores en orden de cómputo pico: G4 y H100 no tienen entitlement en la cuenta y la TPU v6e-1 no se aprovisionó, así que el entrenamiento corrió en **NVIDIA A100** (312 TFLOPS BF16). El MLP de 61-96-32-1 alcanza AUC 0.6305 contra 0.6308 de la logística, de modo que la señal situacional es esencialmente lineal y producción se queda con el modelo chico y auditable. Los pesos quedan en `backend/artifacts/asv_model.json` y la inferencia sería numpy puro, dentro del stack permitido.
+
+## Equipo
+
+Data Rushers.
 
 ## Límites declarados
 
