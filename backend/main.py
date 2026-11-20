@@ -80,6 +80,33 @@ def nn_model() -> dict | None:
     }
 
 
+@lru_cache(maxsize=1)
+def deep_model() -> dict | None:
+    """Modelo de trayectorias entrenado en A100 sobre los 8.3M de registros de tracking.
+    Se reporta como contrincante con validacion cruzada por partido; la inferencia de
+    produccion sigue siendo la logistica auditable."""
+    f = ART / "asv_deep.json"
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text(encoding="utf-8"))
+    m = d["metrics"]
+    return {
+        "arch": m["arch"],
+        "device": m["device"],
+        "params": m["params"],
+        "auc_cv": m["auc_cv"],
+        "logloss_cv": m["logloss_cv"],
+        "logloss_baseline": m["logloss_baseline"],
+        "folds": [f["auc"] for f in m["folds"]],
+        "validation": m["validation"],
+        "augmentation": m["augmentation"],
+        "trackingRowsUsed": m["n_tracking_rows_used"],
+        "shape": d["shape"],
+        "channels": d["channels"],
+        "trainSeconds": m["train_seconds"],
+    }
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -102,6 +129,7 @@ def meta() -> dict:
         "teamRankDefense": lg["teamRankDefense"],
         "coefficients": lg["coefficients"],
         "challenger": nn_model(),
+        "deep": deep_model(),
         "ai": {"enabled": bedrock_available(), "quota": QUOTA_LIMIT, "remaining": quota_remaining()},
     }
 

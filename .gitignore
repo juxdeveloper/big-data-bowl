@@ -22,3 +22,4 @@ ml/asv_train.csv
 ml/.session
 ml/.accel
 ml/_probe.py
+ml/asv_tensor.npz

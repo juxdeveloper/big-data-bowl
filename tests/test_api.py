@@ -102,6 +102,30 @@ def test_dashboard_usa_rutas_relativas():
         assert "localhost" not in t and "127.0.0.1" not in t, f"host fijo en {f.name}"
 
 
+def test_modelo_profundo_de_trayectorias():
+    """El modelo entrenado en A100 sobre el tracking completo debe venir con
+    validacion cruzada por partido y superar la tasa base."""
+    f = ART / "asv_deep.json"
+    if not f.exists():
+        pytest.skip("modelo profundo no descargado")
+    d = json.loads(f.read_text(encoding="utf-8"))
+    m = d["metrics"]
+    assert m["validation"].startswith("5 pliegues")
+    assert len(m["folds"]) == 5
+    assert m["auc_cv"] > 0.6
+    assert m["logloss_cv"] < m["logloss_baseline"]
+    assert m["n_tracking_rows_used"] > 4_000_000, "debe consumir el tracking completo"
+    assert d["shape"] == {"players": 22, "frames": 25, "channels": 8, "staticChannels": 8, "situational": 61}
+
+
+def test_meta_reporta_los_tres_modelos():
+    d = client.get("/api/meta").json()
+    assert d["model"]["auc_test"] > 0.6
+    if d.get("deep"):
+        assert d["deep"]["device"].startswith("cuda")
+        assert len(d["deep"]["folds"]) == 5
+
+
 def test_modelo_contrincante_documentado():
     f = ART / "asv_model.json"
     if not f.exists():

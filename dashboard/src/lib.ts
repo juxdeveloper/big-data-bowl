@@ -116,6 +116,21 @@ export type Meta = {
     logloss_test: number
     params: number
   } | null
+  deep: {
+    arch: string
+    device: string
+    params: number
+    auc_cv: number
+    logloss_cv: number
+    logloss_baseline: number
+    folds: number[]
+    validation: string
+    augmentation: string
+    trackingRowsUsed: number
+    shape: { players: number; frames: number; channels: number; situational: number }
+    channels: string[]
+    trainSeconds: number
+  } | null
   ai: { enabled: boolean; quota: number; remaining: number }
 }
 

@@ -258,14 +258,57 @@ function TeamPage({ meta }: { meta: Meta }) {
               </dd>
             </div>
           </dl>
-          {meta.challenger ? (
-            <p className="mt-3 border-l-2 border-[#dedcd6] pl-3 text-[11px] leading-relaxed text-[#6b6f76]">
-              Entrenamos también una red {meta.challenger.arch} en Google Colab sobre {meta.challenger.features} rasgos
-              (incluida la dispersión pre-snap medida en el tracking). Alcanza AUC{' '}
-              <span className="num">{num(meta.challenger.auc_test, 3)}</span> contra{' '}
-              <span className="num">{num(meta.model.auc_test, 3)}</span> de la logística: la señal situacional es
-              esencialmente lineal, así que producción se queda con el modelo chico y auditable.
-            </p>
+          {meta.challenger || meta.deep ? (
+            <div className="mt-3 border-t rule pt-2">
+              <div className="eyebrow mb-1.5">Modelos evaluados</div>
+              <table className="w-full border-collapse text-[11px]">
+                <thead>
+                  <tr className="text-[9px] uppercase tracking-[0.1em] text-[#8a8e95]">
+                    <th className="py-1 text-left font-medium">Modelo</th>
+                    <th className="py-1 text-right font-medium">Parám.</th>
+                    <th className="py-1 text-right font-medium">AUC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t rule bg-[#fdf8ec]">
+                    <td className="py-1.5">Logística situacional (producción)</td>
+                    <td className="num py-1.5 text-right">17</td>
+                    <td className="num py-1.5 text-right font-semibold">{num(meta.model.auc_test, 4)}</td>
+                  </tr>
+                  {meta.challenger ? (
+                    <tr className="border-t rule">
+                      <td className="py-1.5 text-[#43474d]">MLP situacional (A100)</td>
+                      <td className="num py-1.5 text-right text-[#6b6f76]">9,185</td>
+                      <td className="num py-1.5 text-right">{num(meta.challenger.auc_test, 4)}</td>
+                    </tr>
+                  ) : null}
+                  {meta.deep ? (
+                    <tr className="border-t rule">
+                      <td className="py-1.5 text-[#43474d]">Trayectorias completas (A100)</td>
+                      <td className="num py-1.5 text-right text-[#6b6f76]">
+                        {meta.deep.params.toLocaleString('es-MX')}
+                      </td>
+                      <td className="num py-1.5 text-right">{num(meta.deep.auc_cv, 4)}</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+              {meta.deep ? (
+                <p className="mt-2 text-[11px] leading-relaxed text-[#6b6f76]">
+                  El modelo de trayectorias consume{' '}
+                  <span className="num">{meta.deep.trackingRowsUsed.toLocaleString('es-MX')}</span> observaciones de
+                  tracking ({meta.deep.shape.players} jugadores × {meta.deep.shape.frames} frames ×{' '}
+                  {meta.deep.shape.channels} canales por jugada), con agregación de conjunto por unidad y espejo
+                  lateral del campo como aumento. Validación en {meta.deep.validation}: AUC{' '}
+                  <span className="num">{num(meta.deep.auc_cv, 4)}</span> contra{' '}
+                  <span className="num">{num(meta.model.auc_test, 4)}</span> de la logística. La ganancia es de{' '}
+                  <span className="num">{((meta.deep.auc_cv - meta.model.auc_test) * 1000).toFixed(1)}</span>{' '}
+                  milésimas de AUC con 4,000 veces más parámetros: medimos el trayecto completo y confirmamos que el
+                  acomodo pre-snap ya contiene casi toda la señal. Producción se queda con el modelo chico y
+                  auditable.
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
         <div>
