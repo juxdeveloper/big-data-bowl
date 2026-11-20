@@ -134,10 +134,30 @@ export type Meta = {
   ai: { enabled: boolean; quota: number; remaining: number }
 }
 
+/** Ruta estática equivalente, para la demo pública servida sin backend. */
+function staticPath(path: string): string {
+  if (path.startsWith('api/meta')) return 'static/meta.json'
+  if (path.startsWith('api/team/')) {
+    const [, rest] = path.split('api/team/')
+    const [abbr, query] = rest.split('?')
+    const profile = new URLSearchParams(query ?? '').get('profile') ?? 'GENERAL'
+    return `static/team-${abbr}-${profile}.json`
+  }
+  if (path.startsWith('api/player/')) return `static/player-${path.split('api/player/')[1]}.json`
+  if (path.startsWith('api/players')) return 'static/players.json'
+  return path
+}
+
 export async function get<T>(path: string): Promise<T> {
-  const r = await fetch(path)
-  if (!r.ok) throw new Error(String(r.status))
-  return (await r.json()) as T
+  try {
+    const r = await fetch(path)
+    if (r.ok) return (await r.json()) as T
+  } catch {
+    /* sin backend: se intenta la copia estática */
+  }
+  const s = await fetch(staticPath(path))
+  if (!s.ok) throw new Error(String(s.status))
+  return (await s.json()) as T
 }
 
 // Identidad de equipo. El color solo codifica dato, nunca decora.
