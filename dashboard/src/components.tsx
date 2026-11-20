@@ -86,16 +86,62 @@ export function FieldMap({
   team: string
   onOpen: (id: number) => void
 }) {
-  const [hover, setHover] = useState<Slot | null>(null)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
+  // Cursor en porcentaje del contenedor; null cuando no hay puntero encima.
+  const [cur, setCur] = useState<{ x: number; y: number } | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
   const sx = (x: number) => ((x - X0) / (X1 - X0)) * 100
   const sy = (y: number) => (1 - y / FW) * 100
 
+  /** Lente de aumento: dentro del radio R los jugadores se empujan hacia fuera
+   *  del cursor, así una pila de linieros se abre en abanico sin mover el campo.
+   *  d' = R * (d/R)^k  con k<1 expande el centro y comprime el borde. */
+  const R = 26
+  const K = 0.42
+
+  const lens = (px: number, py: number) => {
+    if (!cur) return { x: px, y: py, mag: 1, d: 1e9 }
+    const ay = 0.75
+    const dx = px - cur.x
+    const dy = (py - cur.y) * ay
+    const d = Math.hypot(dx, dy)
+    if (d > R) return { x: px, y: py, mag: 1, d }
+    if (d < 0.001) return { x: px, y: py, mag: 2.2, d }
+    // empuje solo hacia fuera: nunca acerca a dos jugadores que ya estaban separados
+    const dd = Math.max(d, R * Math.pow(d / R, K))
+    const f = dd / d
+    return { x: cur.x + dx * f, y: cur.y + (dy * f) / ay, mag: 1 + 1.2 * (1 - d / R), d }
+  }
+
+  const placed = lineup.map((p) => ({ p, L: lens(sx(p.x), sy(p.y)) }))
+  // el nombre se muestra solo para el jugador bajo el cursor, no para el racimo entero
+  let focus = -1
+  if (cur) {
+    let best = 1e9
+    placed.forEach((it, i) => {
+      if (it.L.d < best) {
+        best = it.L.d
+        focus = i
+      }
+    })
+    if (best > 6) focus = -1
+  }
+
+  const track = (e: React.MouseEvent) => {
+    const r = box.current?.getBoundingClientRect()
+    if (!r) return
+    setCur({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 })
+  }
+
   return (
-    <div ref={box} className="relative w-full select-none">
-      <div className="relative w-full overflow-hidden border rule bg-field" style={{ aspectRatio: '20 / 15' }}>
+    <div className="relative w-full select-none">
+      <div
+        ref={box}
+        onMouseMove={track}
+        onMouseLeave={() => setCur(null)}
+        className="relative w-full overflow-hidden border rule bg-field"
+        style={{ aspectRatio: '20 / 15' }}
+      >
         <svg viewBox={`0 0 ${X1 - X0} ${FW}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
           {Array.from({ length: X1 - X0 + 1 }, (_, i) => X0 + i).map((x) =>
             x % 5 === 0 ? (
@@ -116,77 +162,57 @@ export function FieldMap({
           <line x1="0" x2={X1 - X0} y1={FW - 1} y2={FW - 1} stroke="#fff" strokeOpacity="0.18" strokeWidth="0.1" />
         </svg>
 
-        <div className="absolute left-2 top-2 text-[9px] uppercase tracking-[0.14em] text-white/45">
+        <div className="absolute left-3 top-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
           Línea de golpeo
         </div>
-        <div className="absolute bottom-2 right-2 text-[9px] uppercase tracking-[0.14em] text-white/45">
+        <div className="absolute bottom-3 right-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
           Avance →
         </div>
 
-        {lineup.map((p) => {
+        {placed.map(({ p, L }, i) => {
           const defense = p.unit === 'DEF'
+          const near = L.mag > 1.4
+          const isFocus = i === focus
           return (
             <button
               key={`${p.slot}-${p.nflId}`}
               onClick={() => onOpen(p.nflId)}
-              onMouseEnter={(e) => {
-                const r = box.current?.getBoundingClientRect()
-                setHover(p)
-                setPos({ x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) })
+              className="focusable absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none"
+              style={{
+                left: `${L.x}%`,
+                top: `${L.y}%`,
+                zIndex: isFocus ? 60 : near ? 20 + Math.round(L.mag * 10) : 10,
+                transition: 'left 90ms linear, top 90ms linear',
               }}
-              onMouseMove={(e) => {
-                const r = box.current?.getBoundingClientRect()
-                setPos({ x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) })
-              }}
-              onMouseLeave={() => setHover(null)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-transform duration-150 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-[color:var(--accent)]"
-              style={{ left: `${sx(p.x)}%`, top: `${sy(p.y)}%` }}
-              title={`${p.name} · ${p.slot}`}
+              aria-label={`${p.name}, ${p.slot}, dorsal ${p.jersey ?? 'sin dato'}`}
             >
-              <div className="flex flex-col items-center gap-0.5">
-                <Helmet team={p.team} jersey={p.jersey} size={46} dim={defense} />
-                <span className="whitespace-nowrap rounded-sm bg-black/55 px-1 text-[10px] font-semibold uppercase tracking-wider leading-[14px] text-white">
+              <div
+                className="flex flex-col items-center gap-0.5"
+                style={{ transform: `scale(${L.mag})`, transition: 'transform 90ms linear' }}
+              >
+                <Helmet team={p.team} jersey={p.jersey} size={38} dim={defense} />
+                <span className="whitespace-nowrap bg-black/70 px-1.5 text-[9px] font-bold uppercase tracking-wider leading-[14px] text-white">
                   {p.slot}
                 </span>
+                {isFocus ? (
+                  <span className="whitespace-nowrap bg-[color:var(--accent)] px-1.5 text-[8px] font-bold uppercase leading-[13px] text-oninvert">
+                    {p.name}
+                  </span>
+                ) : null}
               </div>
             </button>
           )
         })}
-
-        {hover ? (
-          <div
-            className="pointer-events-none absolute z-20 w-56 border rule bg-surface p-3 text-white shadow-xl fade-in"
-            style={{
-              left: Math.min(Math.max(pos.x + 14, 4), 520),
-              top: Math.max(pos.y - 10, 4),
-            }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="text-[13px] font-semibold leading-tight">{hover.name}</div>
-              <div className="num text-[11px] text-accent">#{hover.jersey ?? '—'}</div>
-            </div>
-            <div className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-white/50">
-              {hover.position} · alineado {hover.slot} · {hover.role}
-            </div>
-            <dl className="mt-2 space-y-1 text-[11px]">
-              <Row k="Snaps en el acomodo" v={String(hover.snaps)} />
-              <Row k="Dominio del puesto" v={pct(hover.slotShare, 0)} />
-              <Row k="Posición media" v={`${hover.x >= 0 ? '+' : ''}${hover.x.toFixed(1)} yd · ${hover.y.toFixed(1)} yd`} />
-            </dl>
-            <div className="mt-2 border-t border-white/10 pt-1.5 text-[9px] uppercase tracking-[0.12em] text-accent">
-              Clic para ver el perfil
-            </div>
-          </div>
-        ) : null}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[10px] text-dim">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-dim">
         <span>Posición promedio en el frame del snap, normalizada a atacar hacia la derecha.</span>
-        <span className="flex items-center gap-1.5">
-          <Helmet team={team} jersey={null} size={14} /> ataque
+        <span className="flex items-center gap-2">
+          <Helmet team={team} jersey={null} size={20} /> Ataque
         </span>
-        <span className="flex items-center gap-1.5">
-          <Helmet jersey={null} size={14} dim /> defensa
+        <span className="flex items-center gap-2">
+          <Helmet jersey={null} size={20} dim /> Defensa
         </span>
+        <span className="text-faint">Mueve el cursor para abrir la zona. Clic para el perfil.</span>
       </div>
     </div>
   )
