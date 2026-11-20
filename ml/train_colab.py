@@ -15,8 +15,11 @@ import json
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv("asv_train.csv")
-print("filas", len(df))
+import os
+
+CSV = next(p for p in ("asv_train.csv", "/asv_train.csv", "/content/asv_train.csv") if os.path.exists(p))
+df = pd.read_csv(CSV)
+print("filas", len(df), "desde", CSV)
 
 NUM = ["down", "yardsToGo", "yardsToEZ", "scoreDiff", "clockSec", "quarter",
        "pff_playAction", "defendersInBox", "ySpread", "xSpread", "fieldWidthUsed", "snapSpeed"]
@@ -143,6 +146,6 @@ out = {
     "weights": {k: np.asarray(v).tolist() for k, v in params.items()},
     "metrics": metrics,
 }
-with open("asv_model.json", "w") as f:
+with open("/content/asv_model.json", "w") as f:
     json.dump(out, f)
 print("escrito asv_model.json")

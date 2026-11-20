@@ -56,6 +56,29 @@ if ARTIFACTS_OK:
     league(), teams(), players()  # calienta el cache al arrancar
 
 
+@lru_cache(maxsize=1)
+def nn_model() -> dict | None:
+    """Pesos del MLP entrenado en Colab. Solo se reporta como contraste: la logistica
+    iguala su AUC de prueba con 17 parametros en vez de 9,185."""
+    f = ART / "asv_model.json"
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text(encoding="utf-8"))
+    w = d.get("weights", {})
+    n_params = sum(
+        (len(r) if isinstance(r, list) else 1) * (len(r[0]) if isinstance(r, list) and r and isinstance(r[0], list) else 1)
+        for r in w.values() for _ in [0]
+    )
+    return {
+        "arch": d["metrics"].get("arch"),
+        "device": d["metrics"].get("device"),
+        "features": len(d.get("features", [])),
+        "auc_test": d["metrics"].get("auc_test"),
+        "logloss_test": d["metrics"].get("logloss_test"),
+        "params": n_params,
+    }
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -77,6 +100,7 @@ def meta() -> dict:
         "teamRankOffense": lg["teamRankOffense"],
         "teamRankDefense": lg["teamRankDefense"],
         "coefficients": lg["coefficients"],
+        "challenger": nn_model(),
         "ai": {"enabled": bedrock_available(), "quota": QUOTA_LIMIT, "remaining": quota_remaining()},
     }
 

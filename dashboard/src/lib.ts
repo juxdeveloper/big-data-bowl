@@ -108,6 +108,14 @@ export type Meta = {
   teamRankOffense: { team: string; asv: number }[]
   teamRankDefense: { team: string; asv: number }[]
   coefficients: Record<string, number>
+  challenger: {
+    arch: string
+    device: string
+    features: number
+    auc_test: number
+    logloss_test: number
+    params: number
+  } | null
   ai: { enabled: boolean; quota: number; remaining: number }
 }
 

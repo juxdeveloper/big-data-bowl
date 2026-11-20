@@ -249,6 +249,15 @@ function TeamPage({ meta }: { meta: Meta }) {
               </dd>
             </div>
           </dl>
+          {meta.challenger ? (
+            <p className="mt-3 border-l-2 border-[#dedcd6] pl-3 text-[11px] leading-relaxed text-[#6b6f76]">
+              Entrenamos también una red {meta.challenger.arch} en Google Colab sobre {meta.challenger.features} rasgos
+              (incluida la dispersión pre-snap medida en el tracking). Alcanza AUC{' '}
+              <span className="num">{num(meta.challenger.auc_test, 3)}</span> contra{' '}
+              <span className="num">{num(meta.model.auc_test, 3)}</span> de la logística: la señal situacional es
+              esencialmente lineal, así que producción se queda con el modelo chico y auditable.
+            </p>
+          ) : null}
         </div>
         <div>
           <h3 className="eyebrow mb-2">Mejores acomodos de la liga</h3>
