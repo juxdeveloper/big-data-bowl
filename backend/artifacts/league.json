@@ -1,0 +1,399 @@
+{
+ "metric": {
+  "name": "ASV",
+  "longName": "Alignment Success Value",
+  "definition": "ASV = media(exito observado - exito esperado) por acomodo, contraida hacia cero con k=40 snaps.",
+  "successDefinition": "Jugada exitosa: gana >=45% de las yardas necesarias en 1er down, >=60% en 2do, 100% en 3ro/4to, sin intercepcion.",
+  "expectation": "Regresion logistica (Newton-IRLS con ridge) sobre 16 rasgos situacionales: down, yardas por ganar, yardas a la zona de anotacion, diferencia de marcador, reloj y sus interacciones.",
+  "units": "fraccion de jugada (0.05 = 5 jugadas exitosas extra por cada 100 snaps sobre lo esperado)",
+  "shrinkage": "Bayes empirico, k=40",
+  "limitations": [
+   "Solo jugadas de pase (dropbacks) de las semanas 1 a 8 de la temporada 2021.",
+   "El tracking cubre desde el pre-snap hasta ~0.5 s despues del lanzamiento, no la recepcion ni las yardas posteriores.",
+   "Las coordenadas del acomodo son promedios en el frame del snap, no una jugada individual.",
+   "Las anotaciones se derivan del texto del play-by-play, no de una columna estructurada."
+  ]
+ },
+ "model": {
+  "n_train": 6827,
+  "n_test": 1695,
+  "auc_test": 0.6308,
+  "auc_train": 0.6083,
+  "logloss_test": 0.6609,
+  "logloss_baseline": 0.691,
+  "base_success_rate": 0.4553
+ },
+ "coefficients": {
+  "intercept": 0.7664,
+  "ytg": -1.8528,
+  "ytg2": -0.7362,
+  "ez": 0.411,
+  "ez2": -0.1271,
+  "sdiff": 0.0116,
+  "clock": 0.0741,
+  "q4late": 0.0361,
+  "down2": -0.2322,
+  "down3": -0.8361,
+  "down4": -0.7482,
+  "shortytg": 0.0575,
+  "longytg": -0.092,
+  "redzone": -0.2003
+ },
+ "scope": {
+  "games": 122,
+  "plays": 8557,
+  "analyzedPlays": 8522,
+  "trackingRows": 188254,
+  "players": 1679,
+  "teams": 32,
+  "weeks": [
+   1,
+   8
+  ],
+  "season": 2021
+ },
+ "topOffenseConfigs": [
+  {
+   "config": "EMPTY | 1 RB, 0 TE, 4 WR",
+   "n": 45,
+   "asv": 0.0905
+  },
+  {
+   "config": "EMPTY | 2 RB, 1 TE, 2 WR",
+   "n": 43,
+   "asv": 0.09
+  },
+  {
+   "config": "SINGLEBACK | 2 RB, 1 TE, 2 WR",
+   "n": 59,
+   "asv": 0.0709
+  },
+  {
+   "config": "PISTOL | 2 RB, 1 TE, 2 WR",
+   "n": 43,
+   "asv": 0.0569
+  },
+  {
+   "config": "EMPTY | 2 RB, 2 TE, 1 WR",
+   "n": 15,
+   "asv": 0.043
+  },
+  {
+   "config": "SINGLEBACK | 1 RB, 3 TE, 1 WR",
+   "n": 105,
+   "asv": 0.0388
+  },
+  {
+   "config": "SHOTGUN | 2 QB, 1 RB, 0 TE, 3 WR",
+   "n": 3,
+   "asv": 0.0373
+  },
+  {
+   "config": "I_FORM | 1 RB, 1 TE, 3 WR",
+   "n": 33,
+   "asv": 0.0329
+  }
+ ],
+ "topDefenseConfigs": [
+  {
+   "config": "3 DL, 4 LB, 4 DB | Cover-1",
+   "n": 97,
+   "asv": 0.0955
+  },
+  {
+   "config": "3 DL, 2 LB, 6 DB | Cover-3",
+   "n": 102,
+   "asv": 0.0664
+  },
+  {
+   "config": "3 DL, 3 LB, 5 DB | Cover-1",
+   "n": 240,
+   "asv": 0.066
+  },
+  {
+   "config": "2 DL, 4 LB, 5 DB | Cover-0",
+   "n": 59,
+   "asv": 0.0614
+  },
+  {
+   "config": "3 DL, 4 LB, 4 DB | Cover-0",
+   "n": 28,
+   "asv": 0.0606
+  },
+  {
+   "config": "4 DL, 3 LB, 4 DB | Quarters",
+   "n": 67,
+   "asv": 0.0528
+  },
+  {
+   "config": "3 DL, 2 LB, 6 DB | 2-Man",
+   "n": 17,
+   "asv": 0.0466
+  },
+  {
+   "config": "3 DL, 3 LB, 5 DB | Red Zone",
+   "n": 55,
+   "asv": 0.045
+  }
+ ],
+ "teamRankOffense": [
+  {
+   "team": "LA",
+   "asv": 0.0496
+  },
+  {
+   "team": "KC",
+   "asv": 0.0357
+  },
+  {
+   "team": "CIN",
+   "asv": 0.0287
+  },
+  {
+   "team": "BUF",
+   "asv": 0.0266
+  },
+  {
+   "team": "DEN",
+   "asv": 0.0257
+  },
+  {
+   "team": "TB",
+   "asv": 0.0233
+  },
+  {
+   "team": "DAL",
+   "asv": 0.0184
+  },
+  {
+   "team": "BAL",
+   "asv": 0.0139
+  },
+  {
+   "team": "LAC",
+   "asv": 0.0127
+  },
+  {
+   "team": "SF",
+   "asv": 0.012
+  },
+  {
+   "team": "LV",
+   "asv": 0.0102
+  },
+  {
+   "team": "ARI",
+   "asv": 0.0101
+  },
+  {
+   "team": "DET",
+   "asv": 0.007
+  },
+  {
+   "team": "TEN",
+   "asv": 0.0058
+  },
+  {
+   "team": "NO",
+   "asv": 0.0033
+  },
+  {
+   "team": "PHI",
+   "asv": 0.0008
+  },
+  {
+   "team": "NE",
+   "asv": -0.0001
+  },
+  {
+   "team": "MIN",
+   "asv": -0.0001
+  },
+  {
+   "team": "HOU",
+   "asv": -0.0017
+  },
+  {
+   "team": "CHI",
+   "asv": -0.0035
+  },
+  {
+   "team": "SEA",
+   "asv": -0.0051
+  },
+  {
+   "team": "NYJ",
+   "asv": -0.0106
+  },
+  {
+   "team": "ATL",
+   "asv": -0.0115
+  },
+  {
+   "team": "MIA",
+   "asv": -0.0117
+  },
+  {
+   "team": "CLE",
+   "asv": -0.0119
+  },
+  {
+   "team": "WAS",
+   "asv": -0.012
+  },
+  {
+   "team": "NYG",
+   "asv": -0.0126
+  },
+  {
+   "team": "JAX",
+   "asv": -0.0152
+  },
+  {
+   "team": "GB",
+   "asv": -0.0166
+  },
+  {
+   "team": "PIT",
+   "asv": -0.0369
+  },
+  {
+   "team": "CAR",
+   "asv": -0.0378
+  },
+  {
+   "team": "IND",
+   "asv": -0.0461
+  }
+ ],
+ "teamRankDefense": [
+  {
+   "team": "BUF",
+   "asv": 0.0319
+  },
+  {
+   "team": "MIN",
+   "asv": 0.0269
+  },
+  {
+   "team": "SF",
+   "asv": 0.0207
+  },
+  {
+   "team": "TEN",
+   "asv": 0.0178
+  },
+  {
+   "team": "TB",
+   "asv": 0.0173
+  },
+  {
+   "team": "NE",
+   "asv": 0.0158
+  },
+  {
+   "team": "CAR",
+   "asv": 0.0144
+  },
+  {
+   "team": "NO",
+   "asv": 0.0082
+  },
+  {
+   "team": "ARI",
+   "asv": 0.0074
+  },
+  {
+   "team": "CLE",
+   "asv": 0.0069
+  },
+  {
+   "team": "DEN",
+   "asv": 0.0054
+  },
+  {
+   "team": "CHI",
+   "asv": 0.005
+  },
+  {
+   "team": "GB",
+   "asv": 0.0049
+  },
+  {
+   "team": "NYJ",
+   "asv": 0.0016
+  },
+  {
+   "team": "LAC",
+   "asv": -0.0007
+  },
+  {
+   "team": "LV",
+   "asv": -0.0012
+  },
+  {
+   "team": "DAL",
+   "asv": -0.0015
+  },
+  {
+   "team": "DET",
+   "asv": -0.0022
+  },
+  {
+   "team": "NYG",
+   "asv": -0.0027
+  },
+  {
+   "team": "CIN",
+   "asv": -0.0041
+  },
+  {
+   "team": "BAL",
+   "asv": -0.0065
+  },
+  {
+   "team": "LA",
+   "asv": -0.0098
+  },
+  {
+   "team": "SEA",
+   "asv": -0.0104
+  },
+  {
+   "team": "PIT",
+   "asv": -0.0112
+  },
+  {
+   "team": "MIA",
+   "asv": -0.0114
+  },
+  {
+   "team": "KC",
+   "asv": -0.0114
+  },
+  {
+   "team": "JAX",
+   "asv": -0.0114
+  },
+  {
+   "team": "ATL",
+   "asv": -0.0165
+  },
+  {
+   "team": "HOU",
+   "asv": -0.0184
+  },
+  {
+   "team": "WAS",
+   "asv": -0.0209
+  },
+  {
+   "team": "PHI",
+   "asv": -0.023
+  },
+  {
+   "team": "IND",
+   "asv": -0.0372
+  }
+ ]
+}
