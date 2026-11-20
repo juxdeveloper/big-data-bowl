@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Component, useEffect, useMemo, useState } from 'react'
+import { IconBack, IconGroups, IconMoon, IconSearch, IconShield, IconSun, IconTarget } from './icons'
 import { Bar, FieldMap, Helmet, LineupTable, PlayerAvatar, Rusher, Stat } from './components'
 import type { Meta, Player, TeamProfile } from './lib'
 import { PROFILE_BLURB, PROFILE_LABEL, asv100, get, num, pct, teamColor } from './lib'
@@ -13,6 +14,42 @@ function useRoute(): string {
     return () => window.removeEventListener('hashchange', f)
   }, [])
   return h
+}
+
+/** Ningún fallo de render debe dejar la página en blanco: se aísla y se reporta. */
+class Boundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="mx-auto max-w-xl px-5 py-20">
+          <div className="eyebrow">Error en la vista</div>
+          <p className="mt-2 text-[13px] text-ink2">
+            Algo falló al dibujar esta sección. El resto del análisis sigue disponible.
+          </p>
+          <pre className="mt-3 overflow-x-auto border rule bg-white p-3 text-[11px] text-dim">
+            {String(this.state.error?.message ?? this.state.error)}
+          </pre>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '#/'
+              this.setState({ error: null })
+            }}
+            className="mt-4 border border-invert bg-invert px-3 py-1.5 text-[12px] text-white"
+          >
+            Volver al acomodo
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 const goPlayer = (id: number) => {
@@ -43,7 +80,7 @@ export default function App() {
   if (err)
     return (
       <Shell>
-        <p className="py-20 text-center text-sm text-[#6b6f76]">
+        <p className="py-20 text-center text-sm text-dim">
           No se pudieron cargar los datos del análisis.
         </p>
       </Shell>
@@ -51,50 +88,68 @@ export default function App() {
   if (!meta)
     return (
       <Shell>
-        <p className="py-20 text-center text-sm text-[#6b6f76]">Cargando modelo…</p>
+        <p className="py-20 text-center text-sm text-dim">Cargando modelo…</p>
       </Shell>
     )
 
   return (
     <Shell meta={meta}>
-      {playerId ? <PlayerPage id={playerId} /> : <TeamPage meta={meta} />}
+      <Boundary>{playerId ? <PlayerPage id={playerId} /> : <TeamPage meta={meta} />}</Boundary>
       <Rusher enabled={meta.ai.enabled} quota={meta.ai.quota} />
     </Shell>
   )
 }
 
 /* ------------------------------------------------------------------ marco */
+function useTheme(): [string, () => void] {
+  const [theme, setTheme] = useState<string>(() => localStorage.getItem('asv-theme') ?? 'dark')
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', theme === 'light')
+    localStorage.setItem('asv-theme', theme)
+  }, [theme])
+  return [theme, () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))]
+}
+
 function Shell({ children, meta }: { children: React.ReactNode; meta?: Meta }) {
+  const [theme, toggle] = useTheme()
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-30 border-b rule bg-[#f7f7f5]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-5 py-3">
-          <button onClick={goHome} className="text-left">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[15px] font-semibold tracking-tight">ASV</span>
-              <span className="hidden text-[11px] text-[#6b6f76] sm:inline">Alignment Success Value</span>
-            </div>
-            <div className="hairline mt-1 w-28" />
+      <header className="sticky top-0 z-30 border-b rule bg-app-blur">
+        <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4 px-5 py-3">
+          <button onClick={goHome} className="focusable flex items-center gap-3 text-left" aria-label="Inicio">
+            <IconShield size={28} className="text-accent" />
+            <span>
+              <span className="display block text-[20px] leading-none">ASV</span>
+              <span className="label mt-0.5 block text-[10px]">Alignment Success Value</span>
+            </span>
           </button>
-          <div className="text-right text-[10px] uppercase tracking-[0.12em] text-[#6b6f76]">
-            <div>
-              Equipo <span className="font-semibold text-[#14161a]">Data Rushers</span> · NFL Big Data Bowl 2026 ·
-              Perfil Entrenador
-            </div>
-            {meta ? (
-              <div className="num mt-0.5 text-[#8a8e95]">
-                {String(meta.scope.analyzedPlays)} jugadas · {String(meta.scope.games)} partidos · temporada 2021,
-                semanas 1–8
+          <div className="flex items-center gap-5">
+            <div className="hidden text-right sm:block">
+              <div className="label text-[10px]">
+                Data Rushers · Big Data Bowl 2026 · Entrenador
               </div>
-            ) : null}
+              {meta ? (
+                <div className="num mt-0.5 text-[11px] text-faint">
+                  {String(meta.scope.analyzedPlays)} jugadas · {String(meta.scope.games)} partidos · 2021 S1–8
+                </div>
+              ) : null}
+            </div>
+            <button
+              onClick={toggle}
+              className="focusable flex h-10 w-10 items-center justify-center border rule text-dim transition-colors hover:text-ink"
+              aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <IconSun size={22} /> : <IconMoon size={22} />}
+            </button>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1180px] px-5 pb-28 pt-7">{children}</main>
+      <main className="mx-auto max-w-[1240px] px-5 pb-28 pt-8">{children}</main>
       <footer className="border-t rule">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-2 px-5 py-4 text-[10px] uppercase tracking-[0.12em] text-[#8a8e95]">
-          <span>Data Rushers · NFL Big Data Bowl 2026 · UNAM · AWS · NFL</span>
-          <span>Datos NFL Next Gen Stats y Pro Football Focus, temporada 2021</span>
+        <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-2 px-5 py-5 text-[11px] text-faint">
+          <span className="label text-[10px]">Data Rushers · UNAM · AWS · NFL</span>
+          <span>NFL Next Gen Stats y Pro Football Focus, temporada 2021</span>
         </div>
       </footer>
     </div>
@@ -131,41 +186,44 @@ function TeamPage({ meta }: { meta: Meta }) {
                 {asv100(data.asv)}
               </span>{' '}
               jugadas exitosas por cada 100 snaps cuando se acomoda en{' '}
-              <span className="underline decoration-[#f5c243] decoration-2 underline-offset-4">{data.config}</span>.
+              <span className="underline decoration-[color:var(--accent)] decoration-2 underline-offset-4">{data.config}</span>.
             </>
           ) : (
             'Cargando acomodo…'
           )}
         </h1>
-        <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-[#43474d]">
+        <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-ink2">
           {PROFILE_BLURB[profile]} ASV compara el resultado real contra el que el modelo esperaba dada la situación
           de juego, así que no premia a quien enfrentó terceras y corta.
         </p>
       </section>
 
       {/* controles */}
-      <section className="flex flex-wrap items-end justify-between gap-4 border-y rule py-3">
+      <section className="flex flex-wrap items-center justify-between gap-4 border-y rule py-3">
         <div className="flex flex-wrap items-center gap-2">
-          {PROFILES.map((p) => (
-            <button
-              key={p}
-              onClick={() => setProfile(p)}
-              className={`border px-3 py-1.5 text-[12px] transition-colors ${
-                profile === p
-                  ? 'border-[#14161a] bg-[#14161a] text-white'
-                  : 'rule bg-transparent text-[#43474d] hover:bg-[#edebe5]'
-              }`}
-            >
-              {PROFILE_LABEL[p]}
-            </button>
-          ))}
+          {PROFILES.map((p) => {
+            const Icon = p === 'GENERAL' ? IconGroups : p === 'ATAQUE' ? IconTarget : IconShield
+            return (
+              <button
+                key={p}
+                onClick={() => setProfile(p)}
+                className={`focusable flex items-center gap-2 border px-4 py-2 text-[13px] font-semibold uppercase tracking-wider transition-colors ${
+                  profile === p ? 'tab-active' : 'rule text-dim hover:text-ink'
+                }`}
+              >
+                <Icon size={20} />
+                {PROFILE_LABEL[p]}
+              </button>
+            )
+          })}
         </div>
-        <label className="flex items-center gap-2 text-[11px] text-[#6b6f76]">
-          Equipo
+        <label className="flex items-center gap-2 text-[12px] text-dim">
+          <IconSearch size={20} />
           <select
             value={team}
             onChange={(e) => setTeam(e.target.value)}
-            className="num border rule bg-white px-2 py-1.5 text-[12px] text-[#14161a] outline-none focus:border-[#14161a]"
+            className="num focusable border rule bg-surface px-3 py-2 text-[14px] font-semibold text-ink outline-none"
+            aria-label="Equipo"
           >
             {meta.teams.map((t) => (
               <option key={t} value={t}>
@@ -180,7 +238,7 @@ function TeamPage({ meta }: { meta: Meta }) {
       <section className="grid gap-8 lg:grid-cols-[1.55fr_1fr]">
         <div>
           <h3 className="eyebrow mb-2">Mapa del acomodo óptimo · {PROFILE_LABEL[profile]}</h3>
-          {data ? <FieldMap lineup={data.lineup} team={team} onOpen={goPlayer} /> : <div className="h-80 bg-[#edebe5]" />}
+          {data ? <FieldMap lineup={data.lineup} team={team} onOpen={goPlayer} /> : <div className="h-80 bg-raised" />}
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-5 self-start">
           <Stat label="ASV del acomodo" value={data ? asv100(data.asv) : '—'} sub="jugadas exitosas por 100 snaps sobre lo esperado" accent />
@@ -189,7 +247,7 @@ function TeamPage({ meta }: { meta: Meta }) {
           <Stat label="Éxito esperado" value={data ? pct(data.expected) : '—'} sub="salida del modelo situacional" />
           <Stat label="Contra la liga" value={vsLeague === null ? '—' : asv100(vsLeague)} sub="ASV del equipo menos ASV liga en el mismo acomodo" />
           <Stat label="AUC del modelo" value={num(meta.model.auc_test, 3)} sub={`validación por partido, n=${meta.model.n_test}`} />
-          {loading ? <div className="col-span-2 text-[11px] text-[#6b6f76]">Actualizando…</div> : null}
+          {loading ? <div className="col-span-2 text-[11px] text-dim">Actualizando…</div> : null}
         </div>
       </section>
 
@@ -197,12 +255,12 @@ function TeamPage({ meta }: { meta: Meta }) {
       {data && data.alternatives.length ? (
         <section>
           <h3 className="eyebrow mb-1">Por qué este acomodo y no otro</h3>
-          <p className="mb-3 max-w-2xl text-[12px] text-[#6b6f76]">
+          <p className="mb-3 max-w-2xl text-[12px] text-dim">
             Todos los acomodos de {team} con muestra suficiente, ordenados por ASV contraído.
           </p>
           <table className="w-full border-collapse text-left text-[13px]">
             <thead>
-              <tr className="border-y rule text-[10px] uppercase tracking-[0.1em] text-[#6b6f76]">
+              <tr className="border-y rule text-[10px] uppercase tracking-[0.1em] text-dim">
                 <th className="py-2 font-medium">Acomodo</th>
                 <th className="py-2 text-right font-medium">Snaps</th>
                 <th className="py-2 text-right font-medium">Éxito</th>
@@ -213,13 +271,13 @@ function TeamPage({ meta }: { meta: Meta }) {
             </thead>
             <tbody>
               {data.alternatives.map((a, i) => (
-                <tr key={a.config} className={`border-b rule ${i === 0 ? 'bg-[#fdf8ec]' : ''}`}>
+                <tr key={a.config} className={`border-b rule ${i === 0 ? 'bg-highlight' : ''}`}>
                   <td className="py-2 font-medium">{a.config}</td>
                   <td className="num py-2 text-right">{a.n}</td>
                   <td className="num py-2 text-right">{pct(a.successRate)}</td>
-                  <td className="num hidden py-2 text-right text-[#6b6f76] sm:table-cell">{pct(a.expected)}</td>
+                  <td className="num hidden py-2 text-right text-dim sm:table-cell">{pct(a.expected)}</td>
                   <td className="num py-2 text-right font-semibold">{asv100(a.asv)}</td>
-                  <td className="num hidden py-2 text-right text-[#6b6f76] md:table-cell">{asv100(a.leagueAsv)}</td>
+                  <td className="num hidden py-2 text-right text-dim md:table-cell">{asv100(a.leagueAsv)}</td>
                 </tr>
               ))}
             </tbody>
@@ -239,10 +297,10 @@ function TeamPage({ meta }: { meta: Meta }) {
       <section className="grid gap-8 border-t rule pt-6 md:grid-cols-3">
         <div>
           <h3 className="eyebrow mb-2">Cómo se calcula</h3>
-          <p className="text-[12px] leading-relaxed text-[#43474d]">{meta.metric.definition}</p>
-          <p className="mt-2 text-[12px] leading-relaxed text-[#43474d]">{meta.metric.successDefinition}</p>
-          <p className="mt-2 text-[12px] leading-relaxed text-[#43474d]">{meta.metric.expectation}</p>
-          <dl className="mt-3 space-y-1 text-[11px] text-[#6b6f76]">
+          <p className="text-[12px] leading-relaxed text-ink2">{meta.metric.definition}</p>
+          <p className="mt-2 text-[12px] leading-relaxed text-ink2">{meta.metric.successDefinition}</p>
+          <p className="mt-2 text-[12px] leading-relaxed text-ink2">{meta.metric.expectation}</p>
+          <dl className="mt-3 space-y-1 text-[11px] text-dim">
             <div className="flex justify-between border-t rule pt-1">
               <dt>Unidades</dt>
               <dd className="num text-right">{meta.metric.units}</dd>
@@ -263,29 +321,29 @@ function TeamPage({ meta }: { meta: Meta }) {
               <div className="eyebrow mb-1.5">Modelos evaluados</div>
               <table className="w-full border-collapse text-[11px]">
                 <thead>
-                  <tr className="text-[9px] uppercase tracking-[0.1em] text-[#8a8e95]">
+                  <tr className="text-[9px] uppercase tracking-[0.1em] text-faint">
                     <th className="py-1 text-left font-medium">Modelo</th>
                     <th className="py-1 text-right font-medium">Parám.</th>
                     <th className="py-1 text-right font-medium">AUC</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-t rule bg-[#fdf8ec]">
+                  <tr className="border-t rule bg-highlight">
                     <td className="py-1.5">Logística situacional (producción)</td>
                     <td className="num py-1.5 text-right">17</td>
                     <td className="num py-1.5 text-right font-semibold">{num(meta.model.auc_test, 4)}</td>
                   </tr>
                   {meta.challenger ? (
                     <tr className="border-t rule">
-                      <td className="py-1.5 text-[#43474d]">MLP situacional (A100)</td>
-                      <td className="num py-1.5 text-right text-[#6b6f76]">9,185</td>
+                      <td className="py-1.5 text-ink2">MLP situacional (A100)</td>
+                      <td className="num py-1.5 text-right text-dim">9,185</td>
                       <td className="num py-1.5 text-right">{num(meta.challenger.auc_test, 4)}</td>
                     </tr>
                   ) : null}
                   {meta.deep ? (
                     <tr className="border-t rule">
-                      <td className="py-1.5 text-[#43474d]">Trayectorias completas (A100)</td>
-                      <td className="num py-1.5 text-right text-[#6b6f76]">
+                      <td className="py-1.5 text-ink2">Trayectorias completas (A100)</td>
+                      <td className="num py-1.5 text-right text-dim">
                         {meta.deep.params.toLocaleString('es-MX')}
                       </td>
                       <td className="num py-1.5 text-right">{num(meta.deep.auc_cv, 4)}</td>
@@ -294,7 +352,7 @@ function TeamPage({ meta }: { meta: Meta }) {
                 </tbody>
               </table>
               {meta.deep ? (
-                <p className="mt-2 text-[11px] leading-relaxed text-[#6b6f76]">
+                <p className="mt-2 text-[11px] leading-relaxed text-dim">
                   El modelo de trayectorias consume{' '}
                   <span className="num">{meta.deep.trackingRowsUsed.toLocaleString('es-MX')}</span> observaciones de
                   tracking ({meta.deep.shape.players} jugadores × {meta.deep.shape.frames} frames ×{' '}
@@ -316,7 +374,7 @@ function TeamPage({ meta }: { meta: Meta }) {
           <ul className="text-[12px]">
             {meta.topOffenseConfigs.slice(0, 6).map((c) => (
               <li key={c.config} className="flex justify-between gap-3 border-t rule py-1.5">
-                <span className="text-[#43474d]">{c.config}</span>
+                <span className="text-ink2">{c.config}</span>
                 <span className="num shrink-0 font-medium">{asv100(c.asv)}</span>
               </li>
             ))}
@@ -324,7 +382,7 @@ function TeamPage({ meta }: { meta: Meta }) {
         </div>
         <div>
           <h3 className="eyebrow mb-2">Límites de los datos</h3>
-          <ul className="space-y-1.5 text-[11px] leading-relaxed text-[#6b6f76]">
+          <ul className="space-y-1.5 text-[11px] leading-relaxed text-dim">
             {meta.metric.limitations.map((l) => (
               <li key={l} className="border-t rule pt-1.5">
                 {l}
@@ -348,8 +406,8 @@ function PlayerPage({ id }: { id: number }) {
     get<Player>(`api/player/${id}`).then(setP).catch(() => setErr(true))
   }, [id])
 
-  if (err) return <p className="py-20 text-center text-sm text-[#6b6f76]">Jugador no encontrado.</p>
-  if (!p) return <p className="py-20 text-center text-sm text-[#6b6f76]">Cargando perfil…</p>
+  if (err) return <p className="py-20 text-center text-sm text-dim">Jugador no encontrado.</p>
+  if (!p) return <p className="py-20 text-center text-sm text-dim">Cargando perfil…</p>
 
   const isQB = (p.attempts ?? 0) > 0
   const isRusher = p.rushSnaps >= 10
@@ -358,8 +416,8 @@ function PlayerPage({ id }: { id: number }) {
 
   return (
     <div className="space-y-8 fade-in">
-      <button onClick={goHome} className="eyebrow hover:text-[#14161a]">
-        ← Volver al acomodo
+      <button onClick={goHome} className="focusable flex items-center gap-2 label hover:text-ink">
+        <IconBack size={20} /> Volver al acomodo
       </button>
 
       {/* tarjeta */}
@@ -464,12 +522,12 @@ function PlayerPage({ id }: { id: number }) {
               .map(([k, v]) => (
                 <div key={k}>
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-[#43474d]">{k}</span>
-                    <span className="num text-[#6b6f76]">
+                    <span className="text-ink2">{k}</span>
+                    <span className="num text-dim">
                       {v} · {pct(v / Math.max(1, p.plays), 0)}
                     </span>
                   </div>
-                  <div className="mt-1 h-[3px] w-full bg-[#e6e4de]">
+                  <div className="mt-1 h-[3px] w-full bg-track">
                     <div
                       className="h-[3px]"
                       style={{ width: `${(100 * v) / Math.max(1, p.plays)}%`, background: teamColor(p.team) }}
@@ -478,7 +536,7 @@ function PlayerPage({ id }: { id: number }) {
                 </div>
               ))}
           </div>
-          <p className="mt-4 text-[11px] leading-relaxed text-[#6b6f76]">
+          <p className="mt-4 text-[11px] leading-relaxed text-dim">
             Los percentiles comparan contra jugadores de la misma posición oficial con al menos 20 snaps de pase. El
             dataset cubre únicamente jugadas de pase, por lo que la carga de trabajo en jugadas de carrera y equipos
             especiales no aparece aquí.

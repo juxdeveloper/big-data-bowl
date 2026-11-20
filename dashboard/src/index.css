@@ -2,7 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------- tokens
+   Oscuro por defecto: la referencia es una cabina de transmisión deportiva,
+   no un documento. La clase .light en <html> invierte el sistema. */
 :root {
+  --app: #0c0f12;
+  --app-2: #121820;
+  --surface: #151c24;
+  --raised: #1e2832;
+  --field: #0f161b;
+  --line: #27323d;
+  --line-soft: #1c252e;
+  --ink: #eef3f7;
+  --ink-2: #b9c6d1;
+  --dim: #8798a6;
+  --faint: #5f707e;
+  --accent: #f5c243;
+  --accent-ink: #0c0f12;
+  --track: #1e2832;
+  --highlight: #1d2430;
+  color-scheme: dark;
+}
+
+html.light {
+  --app: #f4f5f6;
+  --app-2: #ffffff;
+  --surface: #ffffff;
+  --raised: #e8eaed;
+  --field: #11181e;
+  --line: #d3d8dd;
+  --line-soft: #e4e7ea;
+  --ink: #10151a;
+  --ink-2: #39434d;
+  --dim: #66737e;
+  --faint: #8b97a1;
+  --accent: #b5810a;
+  --accent-ink: #ffffff;
+  --track: #dde1e5;
+  --highlight: #fdf6e3;
   color-scheme: light;
 }
 
@@ -14,55 +51,131 @@ body,
 
 body {
   margin: 0;
-  background: #f7f7f5;
-  color: #14161a;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--app);
+  color: var(--ink);
+  /* Condensada, mayúsculas apretadas: el registro de un marcador en vivo. */
+  font-family: 'Roboto Condensed', 'Encode Sans Condensed', 'Liberation Sans Narrow', 'Arial Narrow',
+    'Helvetica Neue', ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'tnum' 1, 'cv05' 1;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.num {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
+@layer utilities {
+  .bg-app { background-color: var(--app); }
+  .bg-app2 { background-color: var(--app-2); }
+  .bg-surface { background-color: var(--surface); }
+  .bg-raised { background-color: var(--raised); }
+  .bg-field { background-color: var(--field); }
+  .bg-track { background-color: var(--track); }
+  .bg-highlight { background-color: var(--highlight); }
+  .bg-accent { background-color: var(--accent); }
+  .bg-invert { background-color: var(--accent); }
+  .text-ink { color: var(--ink); }
+  .text-ink2 { color: var(--ink-2); }
+  .text-dim { color: var(--dim); }
+  .text-faint { color: var(--faint); }
+  .text-accent { color: var(--accent); }
+  .text-oninvert { color: var(--accent-ink); }
+  .border-invert { border-color: var(--accent); }
+  .border-accent { border-color: var(--accent); }
+  .fill-ink { fill: var(--ink); }
 }
 
 .rule {
-  border-color: #dedcd6;
+  border-color: var(--line);
+}
+
+.rule-soft {
+  border-color: var(--line-soft);
+}
+
+.bg-app-blur {
+  background-color: color-mix(in srgb, var(--app) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* Números de marcador: anchos iguales para que las columnas no bailen */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+/* Titulares de transmisión */
+.display {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
 }
 
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #6b6f76;
+  color: var(--dim);
 }
 
-.hairline {
-  background: linear-gradient(90deg, #14161a 0%, #14161a 18%, #dedcd6 18%, #dedcd6 100%);
-  height: 2px;
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Barra de acento sobre el bloque activo, como un marcador de cámara */
+.tab-active {
+  background-color: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.focusable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 ::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--app);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c9c6be;
-  border-radius: 9px;
+  background: var(--line);
+  border-radius: 10px;
 }
 
 .fade-in {
-  animation: fade 0.22s ease-out;
+  animation: fade 0.2s ease-out;
 }
 
 @keyframes fade {
   from {
     opacity: 0;
-    transform: translateY(3px);
   }
   to {
     opacity: 1;
-    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

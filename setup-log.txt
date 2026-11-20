@@ -396,3 +396,75 @@ Revisando desviaciones del stack...
 18:15:57 
 RESULTADO: TODO OK, puedes entregar.
 18:15:57 FIN con código de salida 0
+
+===== setup 2026-11-20 18:26:35 =====
+18:26:35 Sistema detectado: linux arm64  |  Python del arranque: 3.12.12
+18:26:35 MODO: entregar  |  versión del script: 2026-11-16  |  argumentos: --entregar
+18:26:35 SISTEMA: Linux-7.0.0-1013-oracle-aarch64-with-glibc2.43  |  detectado: linux arm64  |  versión: #13-Ubuntu SMP PREEMPT Mon Sep 21 16:11:20 UTC 2026
+18:26:35 PYTHON: 3.12.12 (/home/ubuntu/hack/hackathon-unam/.venv/bin/python)
+18:26:35 USUARIO: ubuntu  |  carpeta actual: /home/ubuntu/hack/hackathon-unam
+18:26:35 PROYECTO: /home/ubuntu/hack/hackathon-unam  |  largo de ruta: 32  |  espacios: False  |  no ASCII: False
+18:26:35 DISCO LIBRE: 64.9 GB
+18:26:35 PROXY: ninguno
+18:26:35 Proyecto: /home/ubuntu/hack/hackathon-unam
+18:26:35 
+Preparando la entrega...
+18:26:35 
+[1/7] Validando el entorno
+18:26:35 $ /home/ubuntu/hack/hackathon-unam/.hackathon/.tools/uv/uv pip check --python /home/ubuntu/hack/hackathon-unam/.venv/bin/python
+18:26:35 Checked 55 packages in 2ms
+All installed packages are compatible
+18:26:35 $ /home/ubuntu/hack/hackathon-unam/.venv/bin/python -c import pandas, numpy, fastapi, uvicorn, pydantic, strands, boto3, httpx
+18:26:36 
+18:26:36   Pieza              Esperado                            Encontrado      Estado
+18:26:36   -----------------  ----------------------------------  --------------  ------
+18:26:36   uv                 0.11.19                             0.11.19         OK    
+18:26:36   Python (.venv)     3.12.12                             3.12.12         OK    
+18:26:36   Node               v22.23.1                            v22.23.1        OK    
+18:26:36   npm                10.x                                10.9.8          OK    
+18:26:36   Paquetes Python    9 fijos                             9 coinciden     OK    
+18:26:36   Paquetes npm       12 fijos                            12 coinciden    OK    
+18:26:36   pip check          sin conflictos                      sin conflictos  OK    
+18:26:36   Importar paquetes  pandas, fastapi, pydantic, strands  importan        OK    
+18:26:36 
+[2/7] Revisando el README y el stack
+18:26:36     AVISO: README.md no tiene ninguna imagen; los jueces piden un visual bien formateado
+18:26:37 $ /home/ubuntu/hack/hackathon-unam/.venv/bin/python -c import backend.main as m;assert hasattr(m,'app'), 'APP';assert any(getattr(r,'path','')=='/health' for r in m.app.routes), 'HEALTH'
+18:26:37 
+18:26:37     El proyecto sigue el stack del evento
+18:26:37     Rutas del dashboard OK (ninguna empieza con '/')
+18:26:37 
+[3/7] Compilando el dashboard (vite build)
+18:26:37 $ /home/ubuntu/hack/hackathon-unam/.hackathon/.tools/node/bin/node /home/ubuntu/hack/hackathon-unam/dashboard/node_modules/vite/bin/vite.js build
+18:26:39 vite v5.4.21 building for production...
+transforming...
+✓ 33 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.68 kB │ gzip:  0.40 kB
+dist/assets/index-HyEvgpdB.css   17.49 kB │ gzip:  4.30 kB
+dist/assets/index-DgAmSxxJ.js   173.61 kB │ gzip: 55.00 kB
+✓ built in 1.71s
+18:26:39     Dashboard compilado en dashboard/dist
+18:26:39 $ /home/ubuntu/hack/hackathon-unam/.hackathon/.tools/node/bin/node /home/ubuntu/hack/hackathon-unam/dashboard/node_modules/typescript/bin/tsc --noEmit -p /home/ubuntu/hack/hackathon-unam/dashboard
+18:26:42 
+18:26:42 
+[4/7] Comprobando el backend (sintaxis e importación)
+18:26:42 $ /home/ubuntu/hack/hackathon-unam/.venv/bin/python -m compileall -q backend
+18:26:42 
+18:26:42 $ /home/ubuntu/hack/hackathon-unam/.venv/bin/python -c import backend.main
+18:26:42 
+18:26:42     Backend OK (backend.main se importa sin errores)
+18:26:42 
+[5/7] Buscando llaves y credenciales en tus archivos
+18:26:42     .env NO se incluye en el .zip (las llaves de desarrollo no viajan; el despliegue usa su propio rol)
+18:26:42     Sin credenciales a la vista
+18:26:42 
+[6/7] Empaquetando
+18:27:22 
+[7/7] Verificando el .zip
+18:27:24     176 archivos, 233.2 MB
+18:27:24 
+LISTO. Sube este archivo:
+  /home/ubuntu/hack/entrega-hackathon-unam-20261120-1826.zip
+18:27:24 FIN con código de salida 0

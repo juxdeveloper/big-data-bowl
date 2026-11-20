@@ -412,7 +412,12 @@ if DIST.exists():
 
     @app.get("/{full_path:path}")
     def spa(full_path: str):
-        f = DIST / full_path
-        if f.is_file():
-            return FileResponse(str(f))
+        # Se resuelve y se confirma que el archivo queda dentro de dist/ antes de servirlo:
+        # evita travesia de rutas con '..' en la URL.
+        try:
+            f = (DIST / full_path).resolve()
+            if f.is_file() and f.is_relative_to(DIST.resolve()):
+                return FileResponse(str(f))
+        except (OSError, ValueError):
+            pass
         return FileResponse(str(DIST / "index.html"))
